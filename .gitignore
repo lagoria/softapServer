@@ -1,0 +1,22 @@
+.vscode/
+build/
+
+#package file
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+.bak
+# temp file
+*.log
+*.cache
+*.diff
+*.tmp
+*.o
+*.d
+*.map
+*.htm
+
+dependencies.lock
+sdkconfig.old
