@@ -5,16 +5,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "esp_log.h"
-#include "app_gpio.h"
+#include "key.h"
 
-#define TAG         "app_gpio"
+#define TAG         "key"
 
 #define KEY_SCAN_INTERVAL_MS        60          // 按键扫描间隔(消抖时长)
 
 static QueueHandle_t  key_queue = NULL;
 
 typedef struct key_dev{
-    int32_t key_pin;
+    int key_pin;
     uint8_t active_level;
     struct key_dev *next;
 } btn_dev_t;
@@ -72,7 +72,7 @@ static void key_scan_task(void *pvParameter)
 
         /** ergod all button device*/
         for (target = btn_head_handle; target; target = target->next) {
-            int status = gpio_get_level(target->key_pin);
+            int status = gpio_get_level((gpio_num_t )target->key_pin);
             if (status == target->active_level) {
                 int32_t pin_bit_mask = (1ULL << target->key_pin);
                 if (key_state_mask & pin_bit_mask) {
@@ -94,9 +94,9 @@ static void key_scan_task(void *pvParameter)
 void my_key_init()
 {
     // 熄灭RGB灯，防止闪烁
-    gpio_reset_pin(RGB_LED_PIN);
-    gpio_set_direction(RGB_LED_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(RGB_LED_PIN, 0);
+    gpio_reset_pin((gpio_num_t )RGB_LED_PIN);
+    gpio_set_direction((gpio_num_t )RGB_LED_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level((gpio_num_t )RGB_LED_PIN, 0);
 
     button_gpio_config_t btn_config;
 

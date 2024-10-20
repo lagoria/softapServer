@@ -1,12 +1,9 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
+#include <cstring>
 
 #include "lcd_st7735.h"
 #include "lcd_font.h"
@@ -35,27 +32,27 @@ static uint8_t *lcd_tx_buffer = NULL;
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
 {
     int dc = (int)t->user;
-    gpio_set_level(LCD_PIN_DC, dc);
+    gpio_set_level((gpio_num_t )LCD_PIN_DC, dc);
 }
 
 static void lcd_spi_init(void)
 {
-    // ESP_LOGI(TAG, "Initializing bus SPI%d...", LCD_SPI_HOST+1);
-    spi_bus_config_t buscfg = {
-        .miso_io_num = LCD_PIN_MISO,
-        .mosi_io_num = LCD_PIN_MOSI,
-        .sclk_io_num = LCD_PIN_CLK,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .max_transfer_sz = LCD_MAX_TRANSFER_SIZE
-    };
-    spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 16 * 1000 * 1000,      // Clock out at 16 MHz
-        .mode = 0,                               // SPI mode 0
-        .spics_io_num = LCD_PIN_CS,              // CS pin
-        .queue_size = 3,                         // We want to be able to queue 3 transactions at a time
-        .pre_cb = lcd_spi_pre_transfer_callback, // Specify pre-transfer callback to handle D/C line
-    };
+    spi_bus_config_t buscfg;
+    memset(&buscfg, 0, sizeof(buscfg));
+    buscfg.miso_io_num = LCD_PIN_MISO;
+    buscfg.mosi_io_num = LCD_PIN_MOSI;
+    buscfg.sclk_io_num = LCD_PIN_CLK;
+    buscfg.quadwp_io_num = -1;
+    buscfg.quadhd_io_num = -1;
+    buscfg.max_transfer_sz = LCD_MAX_TRANSFER_SIZE;
+
+    spi_device_interface_config_t devcfg;
+    memset(&devcfg, 0, sizeof(devcfg));
+    devcfg.clock_speed_hz = 16 * 1000 * 1000;      // Clock out at 16 MHz
+    devcfg.mode = 0;                               // SPI mode 0
+    devcfg.spics_io_num = LCD_PIN_CS;              // CS pin
+    devcfg.queue_size = 3;                         // We want to be able to queue 3 transactions at a time
+    devcfg.pre_cb = lcd_spi_pre_transfer_callback; // Specify pre-transfer callback to handle D/C line
     // Initialize the SPI bus
     ESP_ERROR_CHECK( spi_bus_initialize(LCD_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO) );
     // Attach the LCD to the SPI bus
@@ -69,9 +66,9 @@ static void lcd_spi_init(void)
     // bit mask of the pins that you want to set,e.g.
     io_conf.pin_bit_mask = BIT64(LCD_PIN_DC) | BIT64(LCD_PIN_RST);
     // disable pull-down mode
-    io_conf.pull_down_en = 0;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     // disable pull-up mode
-    io_conf.pull_up_en = 0;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     // configure GPIO with the given settings
     gpio_config(&io_conf);
 }
@@ -79,13 +76,13 @@ static void lcd_spi_init(void)
 static void st7735_cmd(uint8_t cmd) 
 {
     esp_err_t ret;
-    spi_transaction_t t = {
-        .length = 8,
-        .flags = SPI_TRANS_USE_TXDATA,
-        .tx_buffer = NULL,
-        .tx_data[0] = cmd,
-        .user = (void *)0,
-    };
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));
+    t.length = 8;
+    t.flags = SPI_TRANS_USE_TXDATA;
+    t.tx_buffer = NULL;
+    t.tx_data[0] = cmd;
+    t.user = (void *)0;
     ret = spi_device_transmit(lcd_spi_dev, &t);     // 异步传输
     assert(ret == ESP_OK);
 }
@@ -128,9 +125,9 @@ void lcd_st7735_init()
     lcd_spi_init();
 
     // Reset the display
-    gpio_set_level(LCD_PIN_RST, 0);
+    gpio_set_level((gpio_num_t )LCD_PIN_RST, 0);
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    gpio_set_level(LCD_PIN_RST, 1);
+    gpio_set_level((gpio_num_t )LCD_PIN_RST, 1);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
     lcd_init_cmd_t st7735_init_cmds[] = {
@@ -195,7 +192,7 @@ void lcd_st7735_init()
     }
 
     // Enable backlight
-    gpio_set_level(PIN_NUM_BCKL, 1);
+    gpio_set_level((gpio_num_t )PIN_NUM_BCKL, 1);
 }
 
 // 设置显示区域（x0,y0）->(x1,y1)
