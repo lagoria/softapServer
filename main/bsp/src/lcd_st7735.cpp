@@ -32,31 +32,31 @@ static uint8_t *lcd_tx_buffer = NULL;
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
 {
     int dc = (int)t->user;
-    gpio_set_level((gpio_num_t )LCD_PIN_DC, dc);
+    gpio_set_level((gpio_num_t )AppCfg::LCD_PIN_DC, dc);
 }
 
 static void lcd_spi_init(void)
 {
     spi_bus_config_t buscfg;
     memset(&buscfg, 0, sizeof(buscfg));
-    buscfg.miso_io_num = LCD_PIN_MISO;
-    buscfg.mosi_io_num = LCD_PIN_MOSI;
-    buscfg.sclk_io_num = LCD_PIN_CLK;
+    buscfg.miso_io_num = AppCfg::LCD_PIN_MISO;
+    buscfg.mosi_io_num = AppCfg::LCD_PIN_MOSI;
+    buscfg.sclk_io_num = AppCfg::LCD_PIN_CLK;
     buscfg.quadwp_io_num = -1;
     buscfg.quadhd_io_num = -1;
-    buscfg.max_transfer_sz = LCD_MAX_TRANSFER_SIZE;
+    buscfg.max_transfer_sz = AppCfg::LCD_MAXTRANS_SIZE;
 
     spi_device_interface_config_t devcfg;
     memset(&devcfg, 0, sizeof(devcfg));
     devcfg.clock_speed_hz = 16 * 1000 * 1000;      // Clock out at 16 MHz
     devcfg.mode = 0;                               // SPI mode 0
-    devcfg.spics_io_num = LCD_PIN_CS;              // CS pin
+    devcfg.spics_io_num = AppCfg::LCD_PIN_CS;      // CS pin
     devcfg.queue_size = 3;                         // We want to be able to queue 3 transactions at a time
     devcfg.pre_cb = lcd_spi_pre_transfer_callback; // Specify pre-transfer callback to handle D/C line
     // Initialize the SPI bus
-    ESP_ERROR_CHECK( spi_bus_initialize(LCD_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO) );
+    ESP_ERROR_CHECK( spi_bus_initialize((spi_host_device_t )AppCfg::LCD_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO) );
     // Attach the LCD to the SPI bus
-    ESP_ERROR_CHECK( spi_bus_add_device(LCD_SPI_HOST, &devcfg, &lcd_spi_dev) );
+    ESP_ERROR_CHECK( spi_bus_add_device((spi_host_device_t )AppCfg::LCD_SPI_HOST, &devcfg, &lcd_spi_dev) );
 
     gpio_config_t io_conf;
     // disable interrupt
@@ -64,7 +64,7 @@ static void lcd_spi_init(void)
     // set as output mode
     io_conf.mode = GPIO_MODE_OUTPUT;
     // bit mask of the pins that you want to set,e.g.
-    io_conf.pin_bit_mask = BIT64(LCD_PIN_DC) | BIT64(LCD_PIN_RST);
+    io_conf.pin_bit_mask = BIT64(AppCfg::LCD_PIN_DC) | BIT64(AppCfg::LCD_PIN_RST);
     // disable pull-down mode
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     // disable pull-up mode
@@ -116,7 +116,7 @@ static void lcd_send_data(uint8_t *data, int len)
 void lcd_st7735_init()
 {
     /* malloc lcd_tx_buffer */
-    lcd_tx_buffer = (uint8_t *)heap_caps_malloc(LCD_MAX_TRANSFER_SIZE, MALLOC_CAP_DMA);
+    lcd_tx_buffer = (uint8_t *)heap_caps_malloc(AppCfg::LCD_MAXTRANS_SIZE, MALLOC_CAP_DMA);
     if (lcd_tx_buffer == NULL) {
         ESP_LOGE(TAG, "lcd_tx_buffer malloc failed");
     }
@@ -125,9 +125,9 @@ void lcd_st7735_init()
     lcd_spi_init();
 
     // Reset the display
-    gpio_set_level((gpio_num_t )LCD_PIN_RST, 0);
+    gpio_set_level((gpio_num_t )AppCfg::LCD_PIN_RST, 0);
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    gpio_set_level((gpio_num_t )LCD_PIN_RST, 1);
+    gpio_set_level((gpio_num_t )AppCfg::LCD_PIN_RST, 1);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
     lcd_init_cmd_t st7735_init_cmds[] = {
@@ -192,7 +192,7 @@ void lcd_st7735_init()
     }
 
     // Enable backlight
-    gpio_set_level((gpio_num_t )PIN_NUM_BCKL, 1);
+    gpio_set_level((gpio_num_t )AppCfg::LCD_PIN_BCKL, 1);
 }
 
 // 设置显示区域（x0,y0）->(x1,y1)
@@ -236,9 +236,9 @@ void lcd_fill_screen(uint16_t color)
     for (uint32_t i = 0; i < LCD_WIDTH * LCD_HEIGHT; i ++) {
         *(uint16_t *)&lcd_tx_buffer[len] = color;
         len += 2;
-        if (len >= LCD_MAX_TRANSFER_SIZE) {
+        if (len >= AppCfg::LCD_MAXTRANS_SIZE) {
             len = 0;
-            lcd_send_data(lcd_tx_buffer, LCD_MAX_TRANSFER_SIZE);        
+            lcd_send_data(lcd_tx_buffer, AppCfg::LCD_MAXTRANS_SIZE);        
         }
     }
     lcd_send_data(lcd_tx_buffer, len);
@@ -287,9 +287,9 @@ static void lcd_draw_fill_rectangle(uint16_t x, uint16_t y, uint16_t x_end, uint
     for (uint32_t i = 0; i < size; i ++) {
         *(uint16_t *)&lcd_tx_buffer[len] = color;
         len += 2;
-        if (len >= LCD_MAX_TRANSFER_SIZE) {
+        if (len >= AppCfg::LCD_MAXTRANS_SIZE) {
             len = 0;
-            lcd_send_data(lcd_tx_buffer, LCD_MAX_TRANSFER_SIZE);        
+            lcd_send_data(lcd_tx_buffer, AppCfg::LCD_MAXTRANS_SIZE);        
         }
     }
     lcd_send_data(lcd_tx_buffer, len);
@@ -344,9 +344,9 @@ void lcd_show_char(uint16_t x,uint16_t y, char char_num,
                 *(uint16_t *)&lcd_tx_buffer[len] = back_color;
             }
             len += 2;
-            if (len >= LCD_MAX_TRANSFER_SIZE) {
+            if (len >= AppCfg::LCD_MAXTRANS_SIZE) {
                 len = 0;
-                lcd_send_data(lcd_tx_buffer, LCD_MAX_TRANSFER_SIZE);        
+                lcd_send_data(lcd_tx_buffer, AppCfg::LCD_MAXTRANS_SIZE);        
             }
         }
     }

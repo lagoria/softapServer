@@ -21,12 +21,12 @@ extern "C" void app_main(void) {
     NvsWrapper::init("nvs");
 
     WifiWrapper::netif_init();
-    WifiWrapper::Apsta::init(CONFIG_SOFTAP_SSID, CONFIG_SOFTAP_PAS);
+    WifiWrapper::Apsta::init(AppCfg::SOFTAP_SSID, AppCfg::SOFTAP_PAWD);
 
     Shell::registerCallback(cmds::call);
 
     // 创建TCP服务器
-    TcpServer::init(TCP_SERVER_PORT);
+    TcpServer::init(AppCfg::SERVER_PORT);
     TcpDataHandle::init();
     TcpServer::registerRecvCallback(TcpDataHandle::response);
 

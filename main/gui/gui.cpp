@@ -78,7 +78,7 @@ void refresh_client_info(lcd_data_frame_t *image, TcpServer::ClientInfo *client,
     sprintf((char *)image->data, "Port:   %d", client->port);
     lcd_printf_string(image, 5, NULL);
 
-    sprintf((char *)image->data, "Id:     %d", client->id);
+    sprintf((char *)image->data, "Mark:   %d", client->id);
     lcd_printf_string(image, 6, NULL);
 }
 
@@ -159,14 +159,14 @@ static void lcd_draw_task(void *arg)
                 lcd_clear_row(&image, 2);
                 lcd_printf_string(&image, 1, "  Device Info");
 
-                sprintf((char *)image.data, "SID:%s",CONFIG_SOFTAP_SSID);
+                sprintf((char *)image.data, "SID:%s",AppCfg::SOFTAP_SSID);
                 lcd_printf_string(&image, 3, NULL);
-                sprintf((char *)image.data, "PWD:%s",CONFIG_SOFTAP_PAS);
+                sprintf((char *)image.data, "PWD:%s",AppCfg::SOFTAP_PAWD);
                 lcd_printf_string(&image, 4, NULL);
 
                 sprintf((char *)image.data, "IP:192.168.4.1");
                 lcd_printf_string(&image, 5, NULL);
-                sprintf((char *)image.data, "TCP PORT:%d",TCP_SERVER_PORT);
+                sprintf((char *)image.data, "TCP PORT:%d", AppCfg::SERVER_PORT);
                 lcd_printf_string(&image, 6, NULL);
                 break;
             }

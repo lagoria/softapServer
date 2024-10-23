@@ -1,25 +1,17 @@
-# HCI Panel  --developing
+# SoftAP Server
 
-Custom HCI control panel with LCD screen
+Custom TCP server implement data forwarding
 
-| Supported Targets | ESP32-S3 |
+| Supported Targets | ESP32-S2 |
 | ----------------- | -------- |
 
-| Supported Vsersion |  V5.0  |  V5.1  |
+| Supported Vsersion |  V5.2  |  V5.3  |
 | ------------------ | ------ | ------ |
 
-## Content
+# Feature
 
-### Hardware list
-
-* An ESP development board
-* An ILI9488 LCD panel, with SPI interface (with FT6x06 I2C touch)
-* An TF card holder,with SPI interface
-* An exterior MP3 module,with uart interface
-* An USB cable for power supply and programming
-
-### Function
-
-* LVGL transplant
-* Image display
-* TCP communication
+1. TCP Socket
+2. WiFi AP+STA NAPT
+3. LCD ST7735
+4. KEY
+5. TF card

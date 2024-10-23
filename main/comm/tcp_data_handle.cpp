@@ -83,9 +83,8 @@ OBuf json_string_parse(IBuf buf) {
         out = Utility::snprint("%s", json["cmd"].getString().data());
     }
     if (json["args"].isArray()) {
-        JsonWrapper array = json.getObject("args");
-        for (int i = 0; i < array.getArraySize(); i++) {
-            out += Utility::snprint(" %s", array[i].getString().data());
+        for (int i = 0; i < json["args"].getArraySize(); i++) {
+            out += Utility::snprint(" %s", json["args"][i].getString().data());
         }
     }
 
