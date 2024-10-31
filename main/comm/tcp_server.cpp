@@ -13,7 +13,7 @@
 namespace TcpServer {
 
 constexpr static const char TAG[] = "tcp_server";
-static SocketWrapper::Server* _tcp_server = nullptr;
+static Wrapper::Socket::Server* _tcp_server = nullptr;
 static RecvCallback _recv_cb = nullptr;
 /* 受连接的TCP客户端信息链表头 */
 static ClientInfo* _client_info_head = nullptr;
@@ -65,7 +65,7 @@ static void delete_tcp_client_list_node(int socket)
 static void tcp_recv_task(void *pvParameters) {
     int *pragma = (int *)pvParameters;
     int fd = *pragma;
-    SocketWrapper::Socket socket(fd);
+    Wrapper::Socket::Socket socket(fd);
     ESP_LOGI(TAG, "client_sock = %d", fd);
     {   // 获取客户端IP地址(作用域限定)
         struct sockaddr client_addr;
@@ -165,7 +165,7 @@ int getSourceSock() {
 
 int init(uint16_t port) {
     int res;
-    _tcp_server = new SocketWrapper::Server(SocketWrapper::Protocol::TCP);
+    _tcp_server = new Wrapper::Socket::Server(Wrapper::Socket::Protocol::TCP);
     if (_tcp_server == nullptr) {
         ESP_LOGE(TAG, "socket error.");
         return -1;

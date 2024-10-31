@@ -181,13 +181,13 @@ static void lcd_draw_task(void *arg)
                 sprintf((char *)image.data, "  sta count:%.1d", sta_count);
                 lcd_printf_string(&image, 1, NULL);
 
-                sprintf((char *)image.data, "Router SSID:\n%s", WifiWrapper::Store::read_ssid().data());
+                sprintf((char *)image.data, "Router SSID:\n%s", Wrapper::WiFi::Store::read_ssid().data());
                 lcd_printf_string(&image, 3, NULL);
 
-                if (WifiWrapper::state() == WifiWrapper::State::CONNECTED) {
-                    sprintf((char *)image.data, "Station IP:\n%s", WifiWrapper::get_ip().data());
+                if (Wrapper::WiFi::state() == Wrapper::WiFi::State::CONNECTED) {
+                    sprintf((char *)image.data, "Station IP:\n%s", Wrapper::WiFi::get_ip().data());
                 } else {
-                    sprintf((char *)image.data, "     Router\n    %s", WifiWrapper::stateString(WifiWrapper::state()));
+                    sprintf((char *)image.data, "     Router\n    %s", Wrapper::WiFi::stateString(Wrapper::WiFi::state()));
                 }
                 lcd_printf_string(&image, 5, NULL);
                 

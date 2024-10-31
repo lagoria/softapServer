@@ -2,8 +2,8 @@
 #include "tcp_server.h"
 #include "socket_wrapper.h"
 #include "json_wrapper.h"
-#include "shell.h"
-#include "utility.h"
+#include "shell_wrapper.h"
+#include "utility_wrapper.h"
 
 #include "esp_log.h"
 #include "esp_heap_caps.h"
@@ -47,7 +47,7 @@ int packageSend(uint8_t goal, FrameType type, IBuf buf) {
     *(uint16_t *)&_tx_buffer[4] = buf.size();
     memcpy(&_tx_buffer[6], buf.data(), buf.size());
 
-    return SocketWrapper::socketSend(client->socket, _tx_buffer, buf.size() + sizeof(FrameHeader));
+    return Wrapper::Socket::send(client->socket, _tx_buffer, buf.size() + sizeof(FrameHeader));
 }
 
 int packageRespond(int sock, FrameType type, IBuf buf) {
@@ -67,12 +67,12 @@ int packageRespond(int sock, FrameType type, IBuf buf) {
     *(uint16_t *)&_tx_buffer[4] = buf.size();
     memcpy(&_tx_buffer[6], buf.data(), buf.size());
 
-    return SocketWrapper::socketSend(sock, _tx_buffer, buf.size() + sizeof(FrameHeader));
+    return Wrapper::Socket::send(sock, _tx_buffer, buf.size() + sizeof(FrameHeader));
 }
 
 OBuf json_string_parse(IBuf buf) {
     std::string json_str = (char *)buf.data();
-    JsonWrapper json(json_str);
+    Wrapper::JsonObject json(json_str);
     OBuf out;
     if (!json.isObject()) {
         ESP_LOGE(TAG, "json parse failed.");
@@ -80,11 +80,11 @@ OBuf json_string_parse(IBuf buf) {
     }
 
     if (json["cmd"].isString()) {
-        out = Utility::snprint("%s", json["cmd"].getString().data());
+        out = Wrapper::Utility::snprint("%s", json["cmd"].getString().data());
     }
     if (json["args"].isArray()) {
         for (int i = 0; i < json["args"].getArraySize(); i++) {
-            out += Utility::snprint(" %s", json["args"][i].getString().data());
+            out += Wrapper::Utility::snprint(" %s", json["args"][i].getString().data());
         }
     }
 
@@ -104,7 +104,7 @@ void response(int sock, IBuf info) {
         for (TcpServer::ClientInfo *list = TcpServer::getClientsInfo(); list; list = list->next) {
             if (list->id == frame.goal) {
                 /* transmit */
-                SocketWrapper::socketSend(list->socket, info.data(), info.size());
+                Wrapper::Socket::send(list->socket, info.data(), info.size());
                 break;
             }
         }
@@ -112,13 +112,13 @@ void response(int sock, IBuf info) {
         ESP_LOGI(TAG, "type: %d", frame.type);
         switch (frame.type) {
         case FrameType::JSON:
-            out = Shell::response(json_string_parse(buf.data()));
+            out = Wrapper::Shell::response(json_string_parse(buf.data()));
             break;
         case FrameType::CMD:
-            out = Shell::response(buf);
+            out = Wrapper::Shell::response(buf);
             break;
         default:
-            out = Utility::snprint("unknown frame type");
+            out = Wrapper::Utility::snprint("unknown frame type");
             break;
         }
         // send response
